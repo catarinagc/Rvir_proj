@@ -10,7 +10,6 @@ public class HeadTiltMovement : MonoBehaviour
     public float crouchSpeed = 20f;
     public float crouchOffset = 0.05f;
     private float standingHeadY;
-    private int teST = 0;
     private float calibratedStandingHeight;
     private bool hasCalibrated = false;
 
@@ -34,20 +33,21 @@ public class HeadTiltMovement : MonoBehaviour
         if (!vrCamera || !hasCalibrated) return;
 
         float currentHeadHeight = vrCamera.position.y;
-        Debug.Log("current: "+ currentHeadHeight);
         bool isCrouched = currentHeadHeight < calibratedStandingHeight - crouchOffset;
 
         float speed = isCrouched ? crouchSpeed : normalSpeed;
 
         if (isCrouched)
         {
-            Debug.Log(teST+ "CROUCH DETECTED");
-            teST++;
+            Debug.Log("CROUCH DETECTED");
+            Debug.Log("current y position: " + currentHeadHeight);
         }
 
         float roll = vrCamera.localEulerAngles.z;
         if (roll > 180f) roll -= 360f;
         float tilt = Mathf.Clamp(roll / 45f, -1f, 1f);
+
+        Debug.Log("current head tilt: " + tilt);
 
         Vector3 forward = vrCamera.forward;
         forward.y = 0;
