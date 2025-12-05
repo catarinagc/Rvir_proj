@@ -7,24 +7,43 @@ public class HeadTiltMovement : MonoBehaviour
     public float speed = 3f;
     public float tiltSpeed = 3f;
     public float normalSpeed = 3f;
-    public float crouchSpeed = 6f;       
-    public float crouchThreshold = 1.2f; 
+    public float crouchSpeed = 20f;
+    public float crouchOffset = 0.05f;
     private float standingHeadY;
+    private int teST = 0;
+    private float calibratedStandingHeight;
+    private bool hasCalibrated = false;
 
     void Start()
     {
         if (!vrCamera) return;
-        standingHeadY = vrCamera.position.y;
+        //standingHeadY = vrCamera.position.y;
+        Invoke(nameof(CalibrateHeight), 1.0f);
+    }
+
+    void CalibrateHeight()
+    {
+        calibratedStandingHeight = vrCamera.position.y;
+        hasCalibrated = true;
+        Debug.Log("Standing height calibrated at: " + calibratedStandingHeight);
     }
 
     void Update()
     {
 
-        float curY = vrCamera.position.y;
-        bool isCrouched = curY < standingHeadY - crouchThreshold;
+        if (!vrCamera || !hasCalibrated) return;
 
-        float currentSpeed = isCrouched ? crouchSpeed : normalSpeed;
+        float currentHeadHeight = vrCamera.position.y;
+        Debug.Log("current: "+ currentHeadHeight);
+        bool isCrouched = currentHeadHeight < calibratedStandingHeight - crouchOffset;
 
+        float speed = isCrouched ? crouchSpeed : normalSpeed;
+
+        if (isCrouched)
+        {
+            Debug.Log(teST+ "CROUCH DETECTED");
+            teST++;
+        }
 
         float roll = vrCamera.localEulerAngles.z;
         if (roll > 180f) roll -= 360f;
@@ -38,7 +57,7 @@ public class HeadTiltMovement : MonoBehaviour
         right.y = 0;
         right.Normalize();
 
-        Vector3 movement = forward * currentSpeed * Time.deltaTime + right * - tilt * tiltSpeed * Time.deltaTime; // Move left/right from tilt
+        Vector3 movement = forward * speed * Time.deltaTime + right * - tilt * tiltSpeed * Time.deltaTime; // Move left/right from tilt
 
         transform.position += movement;
     }
