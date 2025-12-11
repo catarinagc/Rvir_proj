@@ -258,12 +258,16 @@ MonoBehaviour:
   tiltSpeed: 3
   normalSpeed: 3
   crouchSpeed: 6
+<<<<<<< Updated upstream
   crouchOffset: 0.05
 --- !u!4 &61696041 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8806329115733545878, guid: 77e7c27b2c5525e4aa8cc9f99d654486, type: 3}
   m_PrefabInstance: {fileID: 1373153106}
   m_PrefabAsset: {fileID: 0}
+=======
+  crouchThreshold: 1.2
+>>>>>>> Stashed changes
 --- !u!1 &73808061
 GameObject:
   m_ObjectHideFlags: 0
@@ -3774,6 +3778,63 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 486505834}
   m_CullTransparentMesh: 1
+--- !u!1001 &486713051
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 791769aae45a0f14a9504b413747c88e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 12.536285
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 791769aae45a0f14a9504b413747c88e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.000500679
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 791769aae45a0f14a9504b413747c88e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 1.4198723
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 791769aae45a0f14a9504b413747c88e, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 791769aae45a0f14a9504b413747c88e, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 791769aae45a0f14a9504b413747c88e, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 791769aae45a0f14a9504b413747c88e, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 791769aae45a0f14a9504b413747c88e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 791769aae45a0f14a9504b413747c88e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 791769aae45a0f14a9504b413747c88e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 791769aae45a0f14a9504b413747c88e, type: 3}
+      propertyPath: m_Name
+      value: trees 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 791769aae45a0f14a9504b413747c88e, type: 3}
 --- !u!1 &488640738
 GameObject:
   m_ObjectHideFlags: 0
@@ -18635,4 +18696,8 @@ SceneRoots:
   - {fileID: 1703568386}
   - {fileID: 610590593}
   - {fileID: 1825945902}
+<<<<<<< Updated upstream
   - {fileID: 961007966}
+=======
+  - {fileID: 486713051}
+>>>>>>> Stashed changes
