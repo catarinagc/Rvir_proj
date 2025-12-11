@@ -259,12 +259,16 @@ MonoBehaviour:
   normalSpeed: 3
   crouchSpeed: 6
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   crouchOffset: 0.05
 --- !u!4 &61696041 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8806329115733545878, guid: 77e7c27b2c5525e4aa8cc9f99d654486, type: 3}
   m_PrefabInstance: {fileID: 1373153106}
   m_PrefabAsset: {fileID: 0}
+=======
+  crouchThreshold: 1.2
+>>>>>>> Stashed changes
 =======
   crouchThreshold: 1.2
 >>>>>>> Stashed changes
@@ -18697,7 +18701,11 @@ SceneRoots:
   - {fileID: 610590593}
   - {fileID: 1825945902}
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   - {fileID: 961007966}
+=======
+  - {fileID: 486713051}
+>>>>>>> Stashed changes
 =======
   - {fileID: 486713051}
 >>>>>>> Stashed changes
