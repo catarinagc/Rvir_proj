@@ -44,12 +44,19 @@ namespace Unity.VRTemplate
             m_ArrowHeight = new Vector3TweenableVariable();
 #pragma warning restore CS0618 // Type or member is obsolete
             m_ArrowHeight.animationCurve = m_AnimationCurve;
-            m_InitialArrowScale = m_Arrow.localScale;
+            
+            if (m_Arrow != null)
+            {
+                m_InitialArrowScale = m_Arrow.localScale;
+            }
         }
 
         void Update()
         {
-            m_Arrow.localPosition = m_ArrowHeight.Value;
+            if (m_Arrow != null && m_ArrowHeight != null)
+            {
+                m_Arrow.localPosition = m_ArrowHeight.Value;
+            }
         }
 
         /// <summary>
@@ -57,6 +64,8 @@ namespace Unity.VRTemplate
         /// </summary>
         public void OnAnchorEnter()
         {
+            if (m_Arrow == null || m_ArrowHeight == null) return;
+
             m_Arrow.localScale = m_InitialArrowScale;
 
             if (m_FadeAnimation != null)
@@ -80,6 +89,8 @@ namespace Unity.VRTemplate
         /// </summary>
         public void OnAnchorExit()
         {
+            if (m_Arrow == null || m_ArrowHeight == null) return;
+
             if (m_FadeAnimation != null)
             {
                 // Set time to 1, at the end of the animation, play at 1.5x speed
@@ -102,7 +113,10 @@ namespace Unity.VRTemplate
         /// </summary>
         public void HideArrowOnTeleport()
         {
-            m_Arrow.localScale = Vector3.zero;
+            if (m_Arrow != null)
+            {
+                m_Arrow.localScale = Vector3.zero;
+            }
         }
     }
 }
