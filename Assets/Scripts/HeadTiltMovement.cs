@@ -1,21 +1,23 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody))]
 public class HeadTiltMovement : MonoBehaviour
 {
     public Transform vrCamera;
     public float normalSpeed = 3f;
     public float crouchSpeed = 20f;
-    public float tiltSpeed = 3f;
+    public float tiltSpeed = 3f;       
     public float crouchOffset = 0.05f;
-    public PlayerPhysics playerPhysics;
-    
+    public float tiltDeadZone = 0.15f; 
+
+    private Rigidbody rb;
     private float calibratedStandingHeight;
     private bool hasCalibrated = false;
 
     void Start()
     {
-        if (playerPhysics == null)
-            playerPhysics = GetComponent<PlayerPhysics>();
+        rb = GetComponent<Rigidbody>();
+        rb.constraints = RigidbodyConstraints.FreezeRotation; // Prevent spinning
 
         if (!vrCamera) return;
         Invoke(nameof(CalibrateHeight), 1.0f);
@@ -23,33 +25,20 @@ public class HeadTiltMovement : MonoBehaviour
 
     void CalibrateHeight()
     {
-        calibratedStandingHeight = vrCamera.position.y;
+        calibratedStandingHeight = vrCamera.localPosition.y;
         hasCalibrated = true;
-        Debug.Log("Standing height calibrated at: " + calibratedStandingHeight);
     }
 
-    void Update()
+    void FixedUpdate()
     {
-
         if (!vrCamera || !hasCalibrated) return;
 
-        float currentHeadHeight = vrCamera.position.y;
-        bool isCrouched = currentHeadHeight < calibratedStandingHeight - crouchOffset;
-
+        // Crouch detection
+        float headHeight = vrCamera.localPosition.y;
+        bool isCrouched = headHeight < calibratedStandingHeight - crouchOffset;
         float speed = isCrouched ? crouchSpeed : normalSpeed;
 
-        if (isCrouched)
-        {
-            Debug.Log("CROUCH DETECTED");
-            Debug.Log("current y position: " + currentHeadHeight);
-        }
-
-        float roll = vrCamera.localEulerAngles.z;
-        if (roll > 180f) roll -= 360f;
-        float tilt = Mathf.Clamp(roll / 45f, -1f, 1f);
-
-        Debug.Log("current head tilt: " + tilt);
-
+        // Forward and right vectors
         Vector3 forward = vrCamera.forward;
         forward.y = 0;
         forward.Normalize();
@@ -58,17 +47,18 @@ public class HeadTiltMovement : MonoBehaviour
         right.y = 0;
         right.Normalize();
 
-        Vector3 horizontalMovement = forward * speed * Time.deltaTime + right * -tilt * tiltSpeed * Time.deltaTime;
+        // Tilt
+        float roll = vrCamera.localEulerAngles.z;
+        if (roll > 180f) roll -= 360f;
+        float tilt = Mathf.Clamp(roll / 45f, -1f, 1f);
+        if (Mathf.Abs(tilt) < tiltDeadZone) tilt = 0f;
 
-        if (playerPhysics != null)
-        {
-            Vector3 finalMovement = playerPhysics.ApplyPhysics(horizontalMovement);
-            if (finalMovement != Vector3.zero)
-                transform.position += finalMovement;
-        }
-        else
-        {
-            transform.position += horizontalMovement;
-        }
+        // Compute movement
+        Vector3 horizontalMove = forward * speed * Time.fixedDeltaTime + right * -tilt * tiltSpeed * Time.fixedDeltaTime;
+
+        // Move XR Origin without rotating
+        rb.MovePosition(rb.position + horizontalMove);
     }
+
+    
 }
