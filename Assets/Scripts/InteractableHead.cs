@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Interactable : MonoBehaviour
+public class InteractableHead : MonoBehaviour
 {
 
     public GameObject GameManager;
@@ -21,6 +21,6 @@ public class Interactable : MonoBehaviour
     {
         Debug.Log("Player got target");
         Object.Destroy(this.gameObject);
-        managerScript.addPoint();
+        managerScript.addPointHead();
     }
 }

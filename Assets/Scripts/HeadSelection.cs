@@ -1,17 +1,44 @@
 using UnityEngine;
+using UnityEngine.XR;
+using UnityEngine.XR.Interaction.Toolkit;
+
 
 public class HeadSelection : MonoBehaviour
 {
-    public float rayLength = 1.0f;
     public float maxDistance = 10f;
     public Transform reticle;
 
+    public Color normalColor = Color.white;
+    public Color hitColor = Color.red;
+
     private GameObject currentObject;
+    private HeadGestureDetector detector;
+    private Renderer reticleRenderer;
+    private bool triggerPressedLastFrame = false;
+
+
+    void Start()
+    {
+        detector = GetComponent<HeadGestureDetector>();
+        detector.OnLookUpGesture += TryInteract;
+
+        reticleRenderer = reticle.GetComponent<Renderer>();
+    }
+
+    void TryInteract()
+    {
+        if (currentObject != null)
+            InteractWithObjectHead();
+    }
 
     void Update()
     {
-        if (!reticle) return;
+        HandleRaycast();
+        HandleControllerInput();
+    }
 
+    void HandleRaycast()
+    {
         Ray ray = new Ray(transform.position, transform.forward);
         RaycastHit hit;
 
@@ -19,32 +46,51 @@ public class HeadSelection : MonoBehaviour
         {
             reticle.position = hit.point;
             reticle.rotation = Quaternion.LookRotation(-hit.normal);
+            reticleRenderer.material.color = hitColor;
             currentObject = hit.collider.gameObject;
-            Debug.DrawLine(ray.origin, hit.point, Color.green);
         }
         else
         {
-            //reticle.position = ray.origin + ray.direction * maxDistance;
             reticle.position = transform.position + transform.forward * maxDistance;
             reticle.rotation = transform.rotation;
+            reticleRenderer.material.color = normalColor;
             currentObject = null;
-        }
-
-        // Example interaction input (trigger / mouse click / key)
-        if (/*Input.GetButtonDown("Fire1") && */ currentObject != null)
-        {
-            InteractWithObject();
         }
     }
 
-    void InteractWithObject()
+    void HandleControllerInput()
     {
-        var interactable = currentObject.GetComponent<Interactable>();
-        if (interactable != null)
+        bool triggerValue = false;
+        if (UnityEngine.XR.InputDevices.GetDeviceAtXRNode(XRNode.RightHand)
+            .TryGetFeatureValue(CommonUsages.triggerButton, out triggerValue))
         {
-            interactable.Interact();
+            // Edge detection: only fire when trigger is newly pressed
+            if (triggerValue && !triggerPressedLastFrame)
+            {
+                InteractWithObjectButton();
+            }
+
+            triggerPressedLastFrame = triggerValue;
         }
+    }
+
+
+    void InteractWithObjectHead()
+    {
+        var interactable = currentObject?.GetComponent<InteractableHead>();
+        if (interactable != null)
+            interactable.Interact();
 
         Debug.Log("Interacted with: " + currentObject.name);
     }
+
+    void InteractWithObjectButton()
+    {
+        var interactable = currentObject?.GetComponent<InteractableButton>();
+        if (interactable != null)
+            interactable.Interact();
+
+        //Debug.Log("Interacted with: " + currentObject.name);
+    }
 }
+
