@@ -26,7 +26,21 @@ public class TreeTerrainSnapperEditor : EditorWindow
         EditorGUILayout.Space();
 
         treeNamePattern = EditorGUILayout.TextField("Tree Name Pattern", treeNamePattern);
-        terrainLayer = EditorGUILayout.LayerField("Terrain Layer", terrainLayer);
+        
+        // Use MaskField for LayerMask selection
+        string[] layerNames = new string[32];
+        int[] layerValues = new int[32];
+        for (int i = 0; i < 32; i++)
+        {
+            string layerName = LayerMask.LayerToName(i);
+            if (string.IsNullOrEmpty(layerName))
+                layerName = "Layer " + i;
+            layerNames[i] = layerName;
+            layerValues[i] = 1 << i;
+        }
+        int selectedLayerMask = EditorGUILayout.MaskField("Terrain Layer", terrainLayer.value, layerNames);
+        terrainLayer = selectedLayerMask;
+        
         maxRaycastDistance = EditorGUILayout.FloatField("Max Raycast Distance", maxRaycastDistance);
         terrainOffset = EditorGUILayout.FloatField("Terrain Offset", terrainOffset);
         onlyFixFloating = EditorGUILayout.Toggle("Only Fix Floating Trees", onlyFixFloating);

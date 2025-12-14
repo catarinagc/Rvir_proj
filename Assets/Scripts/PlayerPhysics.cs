@@ -23,6 +23,16 @@ public class PlayerPhysics : MonoBehaviour
     [Tooltip("Layer mask for terrain/ground objects.")]
     public LayerMask groundLayer = -1;
     
+    [Header("Tree Collision Settings")]
+    [Tooltip("Layer mask for tree objects. Set this to the layer your trees are on.")]
+    public LayerMask treeLayer = 0;
+    
+    [Tooltip("Distance to check ahead for tree collisions.")]
+    public float treeCheckDistance = 1f;
+    
+    [Tooltip("Force to push player away from trees when collision detected.")]
+    public float treePushForce = 3f;
+    
     private Vector3 velocity;
     private Rigidbody rb;
     private CharacterController cc;
@@ -41,6 +51,9 @@ public class PlayerPhysics : MonoBehaviour
     /// <returns>The final movement vector including gravity and collision adjustments.</returns>
     public Vector3 ApplyPhysics(Vector3 horizontalMovement)
     {
+        // Check for tree collisions and adjust movement
+        horizontalMovement = CheckTreeCollisions(horizontalMovement);
+        
         if (rb != null && rb.useGravity)
         {
             // Rigidbody handles gravity automatically
@@ -112,6 +125,62 @@ public class PlayerPhysics : MonoBehaviour
         }
         
         return movement;
+    }
+    
+    /// <summary>
+    /// Checks for tree collisions ahead and adjusts movement to push player to the side.
+    /// </summary>
+    private Vector3 CheckTreeCollisions(Vector3 horizontalMovement)
+    {
+        if (treeLayer == 0 || horizontalMovement.magnitude < 0.01f)
+        {
+            return horizontalMovement; // No tree layer set or no movement
+        }
+
+        // Check for trees in the movement direction
+        Vector3 checkDirection = horizontalMovement.normalized;
+        Vector3 checkPosition = transform.position + Vector3.up * (playerHeight * 0.5f); // Check at player center height
+        
+        RaycastHit treeHit;
+        if (Physics.Raycast(checkPosition, checkDirection, out treeHit, treeCheckDistance, treeLayer))
+        {
+            // Tree detected ahead, calculate push direction
+            Vector3 treePosition = treeHit.collider.transform.position;
+            Vector3 playerPosition = transform.position;
+            
+            // Calculate which side of tree player is approaching from
+            Vector3 playerToTree = (treePosition - playerPosition).normalized;
+            Vector3 playerForward = checkDirection;
+            playerForward.y = 0;
+            playerForward.Normalize();
+            
+            // Determine push direction (left or right)
+            Vector3 crossProduct = Vector3.Cross(playerForward, playerToTree);
+            float dotProduct = Vector3.Dot(crossProduct, Vector3.up);
+            
+            Vector3 pushDirection;
+            if (dotProduct > 0)
+            {
+                // Push to the left
+                pushDirection = -transform.right;
+            }
+            else
+            {
+                // Push to the right
+                pushDirection = transform.right;
+            }
+            
+            pushDirection.y = 0;
+            pushDirection.Normalize();
+            
+            // Apply push force perpendicular to movement
+            Vector3 pushMovement = pushDirection * treePushForce * Time.deltaTime;
+            
+            // Reduce forward movement and add side push
+            horizontalMovement = horizontalMovement * 0.3f + pushMovement;
+        }
+        
+        return horizontalMovement;
     }
     
     /// <summary>
