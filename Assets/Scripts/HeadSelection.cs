@@ -20,9 +20,15 @@ public class HeadSelection : MonoBehaviour
     void Start()
     {
         detector = GetComponent<HeadGestureDetector>();
-        detector.OnLookUpGesture += TryInteract;
+        if (detector != null)
+        {
+            detector.OnLookUpGesture += TryInteract;
+        }
 
-        reticleRenderer = reticle.GetComponent<Renderer>();
+        if (reticle != null)
+        {
+            reticleRenderer = reticle.GetComponent<Renderer>();
+        }
     }
 
     void TryInteract()
@@ -44,16 +50,28 @@ public class HeadSelection : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, maxDistance))
         {
-            reticle.position = hit.point;
-            reticle.rotation = Quaternion.LookRotation(-hit.normal);
-            reticleRenderer.material.color = hitColor;
+            if (reticle != null)
+            {
+                reticle.position = hit.point;
+                reticle.rotation = Quaternion.LookRotation(-hit.normal);
+            }
+            if (reticleRenderer != null && reticleRenderer.material != null)
+            {
+                reticleRenderer.material.color = hitColor;
+            }
             currentObject = hit.collider.gameObject;
         }
         else
         {
-            reticle.position = transform.position + transform.forward * maxDistance;
-            reticle.rotation = transform.rotation;
-            reticleRenderer.material.color = normalColor;
+            if (reticle != null)
+            {
+                reticle.position = transform.position + transform.forward * maxDistance;
+                reticle.rotation = transform.rotation;
+            }
+            if (reticleRenderer != null && reticleRenderer.material != null)
+            {
+                reticleRenderer.material.color = normalColor;
+            }
             currentObject = null;
         }
     }
