@@ -3,20 +3,21 @@ using UnityEngine;
 public class HeadTiltMovement : MonoBehaviour
 {
     public Transform vrCamera;
-    public float sensitivity = 2f;
-    public float speed = 3f;
-    public float tiltSpeed = 3f;
     public float normalSpeed = 3f;
     public float crouchSpeed = 20f;
+    public float tiltSpeed = 3f;
     public float crouchOffset = 0.05f;
-    private float standingHeadY;
+    public PlayerPhysics playerPhysics;
+    
     private float calibratedStandingHeight;
     private bool hasCalibrated = false;
 
     void Start()
     {
+        if (playerPhysics == null)
+            playerPhysics = GetComponent<PlayerPhysics>();
+
         if (!vrCamera) return;
-        //standingHeadY = vrCamera.position.y;
         Invoke(nameof(CalibrateHeight), 1.0f);
     }
 
@@ -57,8 +58,17 @@ public class HeadTiltMovement : MonoBehaviour
         right.y = 0;
         right.Normalize();
 
-        Vector3 movement = forward * speed * Time.deltaTime + right * - tilt * tiltSpeed * Time.deltaTime; // Move left/right from tilt
+        Vector3 horizontalMovement = forward * speed * Time.deltaTime + right * -tilt * tiltSpeed * Time.deltaTime;
 
-        transform.position += movement;
+        if (playerPhysics != null)
+        {
+            Vector3 finalMovement = playerPhysics.ApplyPhysics(horizontalMovement);
+            if (finalMovement != Vector3.zero)
+                transform.position += finalMovement;
+        }
+        else
+        {
+            transform.position += horizontalMovement;
+        }
     }
 }
