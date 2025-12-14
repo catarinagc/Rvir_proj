@@ -21,6 +21,14 @@ public class Manager : MonoBehaviour
         if (scoreTextTree != null)
         {
             scoreTextComponentTree = scoreTextTree.GetComponent<TextMeshProUGUI>();
+            if (scoreTextComponentTree == null)
+            {
+                Debug.LogError("Manager: ScoreTextTree GameObject '" + scoreTextTree.name + "' doesn't have a TextMeshProUGUI component!");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Manager: ScoreTextTree GameObject is not assigned in the Inspector!");
         }
     }
 
@@ -47,10 +55,27 @@ public class Manager : MonoBehaviour
     public void addPointTree()
     {
         playerScoreTree++;
-        Debug.Log("score tree: " + playerScoreTree);
+        
+        // Try to get component if it's null (in case it wasn't set in Start)
+        if (scoreTextComponentTree == null && scoreTextTree != null)
+        {
+            scoreTextComponentTree = scoreTextTree.GetComponent<TextMeshProUGUI>();
+        }
+        
         if (scoreTextComponentTree != null)
         {
-            scoreTextComponentTree.text = "Score: " + playerScoreTree;
+            scoreTextComponentTree.text = "Trees Collisions: " + playerScoreTree;
+        }
+        else
+        {
+            if (scoreTextTree == null)
+            {
+                Debug.LogError("Manager: ScoreTextTree GameObject is NULL! Please assign it in the Inspector.");
+            }
+            else
+            {
+                Debug.LogError("Manager: scoreTextComponentTree is NULL! GameObject '" + scoreTextTree.name + "' might not have a TextMeshProUGUI component.");
+            }
         }
     }
 }

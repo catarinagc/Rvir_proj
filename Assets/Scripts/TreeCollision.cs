@@ -3,6 +3,7 @@ using UnityEngine;
 /// <summary>
 /// Handles collision detection with trees. When the XR Rig collides with a tree,
 /// it pushes the player to the side based on approach direction and increments the tree collision counter.
+/// Uses proximity detection since CharacterController doesn't generate collision events.
 /// </summary>
 public class TreeCollision : MonoBehaviour
 {
@@ -17,6 +18,12 @@ public class TreeCollision : MonoBehaviour
     [Tooltip("Minimum time between collision triggers (prevents rapid counter increments).")]
     public float collisionCooldown = 1f;
     
+    [Tooltip("Detection radius for proximity-based collision detection.")]
+    public float detectionRadius = 2.5f;
+    
+    [Tooltip("Enable debug mode to see distance calculations in console.")]
+    public bool debugMode = false;
+    
     [Tooltip("Tag name for the XR Rig/Player GameObject.")]
     public string playerTag = "Player";
     
@@ -24,34 +31,81 @@ public class TreeCollision : MonoBehaviour
     private float lastCollisionTime = 0f;
     private CharacterController playerCharacterController;
     private Transform playerTransform;
+    private Transform xrRigTransform;
 
     void Start()
     {
         if (GameManager != null)
         {
             managerScript = GameManager.GetComponent<Manager>();
+            if (managerScript == null)
+            {
+                Debug.LogError("TreeCollision: GameManager GameObject doesn't have a Manager component! GameObject: " + GameManager.name);
+            }
         }
         else
         {
             Debug.LogWarning("TreeCollision: GameManager reference not set on " + gameObject.name);
         }
+        
+        // Find XR Rig at start
+        FindXRRig();
     }
 
-    void OnCollisionEnter(Collision collision)
+    void Update()
     {
-        HandleCollision(collision.gameObject, collision);
+        // Use proximity detection since CharacterController doesn't generate collision events
+        CheckProximityCollision();
     }
 
-    void OnCollisionStay(Collision collision)
+    void FindXRRig()
     {
-        // Also handle continuous collisions to prevent getting stuck
-        HandleCollision(collision.gameObject, collision);
+        // Find the XR Rig in the scene
+        GameObject[] allObjects = FindObjectsOfType<GameObject>();
+        foreach (GameObject obj in allObjects)
+        {
+            if (IsXRRig(obj))
+            {
+                xrRigTransform = obj.transform;
+                playerCharacterController = obj.GetComponent<CharacterController>();
+                return;
+            }
+        }
+        Debug.LogWarning("TreeCollision: Could not find XR Rig in scene. Will search each frame.");
     }
 
-    private void HandleCollision(GameObject collidingObject, Collision collision)
+    void CheckProximityCollision()
     {
-        // Check if colliding object is the player (XR Rig)
-        if (collidingObject.CompareTag(playerTag) || IsXRRig(collidingObject))
+        // If we haven't found the XR Rig yet, try to find it
+        if (xrRigTransform == null)
+        {
+            FindXRRig();
+            if (xrRigTransform == null)
+            {
+                return; // Still can't find it
+            }
+        }
+
+        // Calculate horizontal distance from tree to player (ignore Y-axis)
+        Vector3 treePosition = transform.position;
+        Vector3 playerPosition = xrRigTransform.position;
+        
+        // Use horizontal distance only (ignore Y-axis difference)
+        Vector3 horizontalDiff = new Vector3(
+            playerPosition.x - treePosition.x,
+            0,
+            playerPosition.z - treePosition.z
+        );
+        float distance = horizontalDiff.magnitude;
+
+        // Debug logging when player is close
+        if (debugMode && distance <= detectionRadius * 1.2f)
+        {
+            Debug.Log($"TreeCollision [{gameObject.name}]: Distance to player: {distance:F2} (radius: {detectionRadius})");
+        }
+
+        // Check if player is within detection radius
+        if (distance <= detectionRadius)
         {
             // Check cooldown
             if (Time.time - lastCollisionTime < collisionCooldown)
@@ -59,63 +113,45 @@ public class TreeCollision : MonoBehaviour
                 return;
             }
 
-            // Get player components
-            if (playerCharacterController == null)
-            {
-                playerCharacterController = collidingObject.GetComponent<CharacterController>();
-            }
-            if (playerTransform == null)
-            {
-                playerTransform = collidingObject.transform;
-            }
-
-            if (playerTransform == null)
-            {
-                return;
-            }
-
-            // Calculate push direction based on approach
-            Vector3 pushDirection = CalculatePushDirection(collision, playerTransform);
-
-            // Apply push to player
-            PushPlayerAway(pushDirection, collidingObject);
-
-            // Increment counter
-            if (managerScript != null)
-            {
-                managerScript.addPointTree();
-            }
-
-            lastCollisionTime = Time.time;
+            // Player is close enough, handle collision
+            HandleProximityCollision(xrRigTransform.gameObject, distance);
         }
     }
 
-    /// <summary>
-    /// Calculates the push direction based on which side of the tree the player approached from.
-    /// </summary>
-    private Vector3 CalculatePushDirection(Collision collision, Transform playerTransform)
+    void HandleProximityCollision(GameObject playerObject, float distance)
     {
-        // Get the collision point
-        Vector3 collisionPoint = collision.contacts[0].point;
+        // Get player components if needed
+        if (playerCharacterController == null)
+        {
+            playerCharacterController = playerObject.GetComponent<CharacterController>();
+        }
+        if (playerTransform == null)
+        {
+            playerTransform = playerObject.transform;
+        }
+
+        if (playerTransform == null)
+        {
+            Debug.LogWarning("TreeCollision: Player transform is null!");
+            return;
+        }
+
+        // Calculate push direction (push away from tree)
         Vector3 treePosition = transform.position;
         Vector3 playerPosition = playerTransform.position;
-
-        // Calculate direction from player to tree
-        Vector3 playerToTree = (treePosition - playerPosition).normalized;
+        Vector3 directionFromTree = (playerPosition - treePosition).normalized;
+        directionFromTree.y = 0; // Keep horizontal
+        directionFromTree.Normalize();
         
-        // Get player's forward direction (horizontal only)
+        // Get perpendicular direction (left or right based on approach)
         Vector3 playerForward = playerTransform.forward;
         playerForward.y = 0;
         playerForward.Normalize();
-
-        // Calculate which side of the tree the player is on
-        // Using cross product to determine left/right
+        
+        Vector3 playerToTree = (treePosition - playerPosition).normalized;
         Vector3 crossProduct = Vector3.Cross(playerForward, playerToTree);
         float dotProduct = Vector3.Dot(crossProduct, Vector3.up);
-
-        // Positive dot product means player is on the right side of tree (relative to forward)
-        // Negative means left side
-        // Push away from tree: if on right, push left; if on left, push right
+        
         Vector3 pushDirection;
         if (dotProduct > 0)
         {
@@ -127,12 +163,41 @@ public class TreeCollision : MonoBehaviour
             // Player is on left side, push to the right
             pushDirection = playerTransform.right;
         }
-
-        // Make sure push direction is horizontal only
+        
         pushDirection.y = 0;
         pushDirection.Normalize();
 
-        return pushDirection;
+        // Apply push to player
+        PushPlayerAway(pushDirection, playerObject);
+
+        // Increment counter
+        if (managerScript != null)
+        {
+            managerScript.addPointTree();
+        }
+        else
+        {
+            Debug.LogError("TreeCollision: Manager script is null! Make sure GameManager is assigned in the Inspector.");
+        }
+
+        lastCollisionTime = Time.time;
+    }
+
+    // Keep these methods for backward compatibility (in case colliders are set up)
+    void OnCollisionEnter(Collision collision)
+    {
+        if (IsXRRig(collision.gameObject))
+        {
+            HandleProximityCollision(collision.gameObject, 0f);
+        }
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (IsXRRig(other.gameObject))
+        {
+            HandleProximityCollision(other.gameObject, 0f);
+        }
     }
 
     /// <summary>
@@ -156,7 +221,7 @@ public class TreeCollision : MonoBehaviour
     /// <summary>
     /// Checks if the GameObject is the XR Rig (by checking for CharacterController or XR Origin component).
     /// </summary>
-    private bool IsXRRig(GameObject obj)
+    bool IsXRRig(GameObject obj)
     {
         // Check for CharacterController (XR Rig typically has this)
         if (obj.GetComponent<CharacterController>() != null)
@@ -188,5 +253,12 @@ public class TreeCollision : MonoBehaviour
         }
 
         return false;
+    }
+
+    // Visualize detection radius in editor
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, detectionRadius);
     }
 }
