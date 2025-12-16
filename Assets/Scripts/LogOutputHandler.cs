@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Collections.Concurrent;
 using UnityEngine;
+using System.Diagnostics;
 
 //#if UNITY_EDITOR
 //using UnityEditor;
@@ -40,6 +41,7 @@ public class LogOutputHandler : MonoBehaviour
 
     void Start()
     {
+        Debug.Log("hello");
         // nothing extra
     }
 
