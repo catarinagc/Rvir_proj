@@ -13,16 +13,18 @@ public class HeadSelection : MonoBehaviour
 
     private GameObject currentObject;
     private HeadGestureDetector detector;
+    private XRHeadNodDetector nodDetector;
     private Renderer reticleRenderer;
     private bool triggerPressedLastFrame = false;
 
 
     void Start()
     {
-        detector = GetComponent<HeadGestureDetector>();
-        if (detector != null)
+        //detector = GetComponent<HeadGestureDetector>();
+        nodDetector = GetComponent<XRHeadNodDetector>();
+        if (nodDetector != null)
         {
-            detector.OnLookUpGesture += TryInteract;
+            nodDetector.OnNod += TryInteract;
         }
 
         if (reticle != null)
