@@ -1,3 +1,4 @@
+using System.Threading;
 using UnityEngine;
 
 /// <summary>
@@ -32,7 +33,12 @@ public class PlayerPhysics : MonoBehaviour
     
     [Tooltip("Force to push player away from trees when collision detected.")]
     public float treePushForce = 3f;
-    
+
+    /*[Header("Speed Tracking")]
+    private Vector3 lastPosition;
+    private float totalDistanceTravelled = 0f;
+    private float elapsedTime = 0f; */
+
     private Vector3 velocity;
     private Rigidbody rb;
     private CharacterController cc;
@@ -78,6 +84,19 @@ public class PlayerPhysics : MonoBehaviour
     
     private Vector3 ApplyManualPhysics(Vector3 horizontalMovement)
     {
+        /* // Update elapsed time
+        elapsedTime += Time.deltaTime;
+
+        // Calculate distance travelled this frame
+        if (lastPosition != Vector3.zero)
+        {
+            float distanceThisFrame = Vector3.Distance(transform.position, lastPosition);
+            totalDistanceTravelled += distanceThisFrame;
+        }
+
+        // Update last position for next frame
+        lastPosition = transform.position; */
+
         // Ground detection
         Vector3 feetPosition = transform.position + Vector3.down * (playerHeight * 0.5f);
         bool isGrounded = Physics.CheckSphere(feetPosition, playerRadius, groundLayer) || 
@@ -190,5 +209,11 @@ public class PlayerPhysics : MonoBehaviour
     {
         velocity = Vector3.zero;
     }
+
+    /* public float getAverageSpeed()
+    {
+        if (elapsedTime <= 0f) return 0f;
+        return totalDistanceTravelled / elapsedTime; //units per second
+    } */
 }
 

@@ -6,7 +6,7 @@ public class HeadGestureDetector : MonoBehaviour
     public float upwardAngleThreshold = -10f;  // head looking up (pitch is negative)
     public float minAngularSpeed = 30f;        // degrees per second
     public float gestureCooldown = 0.6f;
-    private float averageTilt = 0.0f;
+
 
     private float lastPitch;
     private float cooldownTimer = 0f;
@@ -44,11 +44,6 @@ public class HeadGestureDetector : MonoBehaviour
         // Convert Unity's 0–360 pitch into -180–180
         float pitch = e.x > 180 ? e.x - 360 : e.x;
         return pitch;
-    }
-
-    public void debugAverageTilt()
-    {
-        Debug.Log(averageTilt);
     }
     
 }

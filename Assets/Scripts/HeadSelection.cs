@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Interaction.Toolkit;
@@ -15,6 +17,9 @@ public class HeadSelection : MonoBehaviour
     private HeadGestureDetector detector;
     private Renderer reticleRenderer;
     private bool triggerPressedLastFrame = false;
+    //private int greenBallCount = 0; // button interactions
+    //private int redBallCount = 0; // head interactions
+    //private float lastSelectionTime = 0f; // start at 0 or scene start
 
 
     void Start()
@@ -97,18 +102,33 @@ public class HeadSelection : MonoBehaviour
     {
         var interactable = currentObject?.GetComponent<InteractableHead>();
         if (interactable != null)
+        {
             interactable.Interact();
+            //greenBallCount++;
 
-        Debug.Log("Interacted with: " + currentObject.name);
+            /* float reactionTime = Time.time - lastSelectionTime;
+            * lastSelectionTime = Time.time;
+            * Debug.Log($"Green ball selected at {Time.time:F2}s (reaction time: {reactionTime:F2}s)"); */
+        }
+        //Debug.Log("Interacted with: " + currentObject.name); //possibly delete since not clear? will say Interacted with: targetHeadSelection I think
+
     }
 
     void InteractWithObjectButton()
     {
         var interactable = currentObject?.GetComponent<InteractableButton>();
         if (interactable != null)
+        {
             interactable.Interact();
+            //redBallCount++;
 
-        //Debug.Log("Interacted with: " + currentObject.name);
+            /* float reactionTime = Time.time - lastSelectionTime;
+             * lastSelectionTime = Time.time;
+             * Debug.Log($"Red ball selected at {Time.time:F2}s (reaction time: {reactionTime:F2}s)"); */
+        }
+        //Debug.Log("Interacted with: " + currentObject.name); //why is this commented out? possibly delete?
     }
+
+
 }
 

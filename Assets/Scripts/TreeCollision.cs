@@ -174,6 +174,8 @@ public class TreeCollision : MonoBehaviour
         if (managerScript != null)
         {
             managerScript.addPointTree();
+
+            //Debug.Log($"Tree hit: {gameObject.name} at time {Time.time:F2} seconds"); //possibly delete if we don't need this!
         }
         else
         {

@@ -1,7 +1,12 @@
+using System;
 using UnityEngine;
 
 public class HeadTiltMovement : MonoBehaviour
 {
+    /*[Header("Tilt Tracking")]
+    private float totalTilt = 0f;
+    private int tiltSamples = 0;*/
+
     public Transform vrCamera;
     public float normalSpeed = 3f;
     public float crouchSpeed = 20f;
@@ -47,6 +52,9 @@ public class HeadTiltMovement : MonoBehaviour
         float roll = vrCamera.localEulerAngles.z;
         if (roll > 180f) roll -= 360f;
         float tilt = Mathf.Clamp(roll / 45f, -1f, 1f);
+       /* //Accumulate for average calculation
+        totalTilt += Math.Abs(tilt); // use absolute value to ignore left/right sign
+        tiltSamples++; */
 
         Debug.Log("current head tilt: " + tilt);
 
@@ -71,4 +79,10 @@ public class HeadTiltMovement : MonoBehaviour
             transform.position += horizontalMovement;
         }
     }
+
+   /* public float GetAverageTilt()
+    {
+        if (tiltSamples == 0) return 0f;
+        return totalTilt / tiltSamples;
+    } */
 }

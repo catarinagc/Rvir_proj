@@ -1,9 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Diagnostics;
 
 public class Manager : MonoBehaviour
 {
+    //public PlayerPhysics playerPhysics; 
+    //public HeadTiltMovement headTiltMovement; 
     private int playerScoreHead = 0;
     private int playerScoreButton = 0;
     private int playerScoreTree = 0;
@@ -78,4 +81,26 @@ public class Manager : MonoBehaviour
             }
         }
     }
+
+    /* public void Endgame()
+     {
+         Debug.Log("=== END OF GAME SUMMARY ===");
+         Debug.Log($"Green balls selected (button): {playerScoreButton}");
+         Debug.Log($"Red balls selected (head): {playerScoreHead}");
+         Debug.Log($"Total trees hit: {playerScoreTree}");
+
+         if (playerPhysics != null)
+         {
+            float avgSpeed = playerPhysics.GetAverageSpeed();
+            Debug.Log($"Average player speed: {avgSpeed:F2} units/sec");
+         }
+
+         if (headTiltMovement != null)
+         {
+            float avgTilt = headTiltMovement.GetAverageTilt();
+            Debug.Log($"Average head tilt magnitude: {avgTilt:F2}");
+         }
+
+         Debug.Log("=== END OF SUMMARY ===");
+     } */
 }
