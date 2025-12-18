@@ -13,6 +13,31 @@ public class Manager : MonoBehaviour
     private TextMeshProUGUI scoreTextComponentHead;
     private TextMeshProUGUI scoreTextComponentButton;
     private TextMeshProUGUI scoreTextComponentTree;
+
+    [Header("Prefabs")]
+    public GameObject pooledTree;
+    public GameObject ballHead;
+    public GameObject ballController;
+
+    private bool hasBallOnScreen = false;
+    private bool hasTreeOnScreen = false;
+
+    [Header("Tree Spawning")]
+    public Transform treeSpawnPoint;
+    public float timeBetweenTrees = 3f;
+    private float treeSpawnTimer = 0f;
+
+
+    [Header("Ball Spawning")]
+    public Transform ballSpawnPoint;
+    public float timeBetweenBalls = 3f;
+    private float ballSpawnTimer = 0f;
+
+    [Header("Lanes positions")]
+    public float[] treeXLanes = new float[] { -5f, 0f, 5f };
+    public float[] ballXLanes = new float[] { -5f, 0f, 5f };
+    public float[] ballYLanes = new float[] { 1f, 0f};
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -33,10 +58,11 @@ public class Manager : MonoBehaviour
     }
 
     //// Update is called once per frame
-    //void Update()
-    //{
-        
-    //}
+    void Update()
+    {
+        HandleTreeSpawning();
+        HandleBallSpawning();
+    }
 
     public void addPointHead()
     {
@@ -78,4 +104,93 @@ public class Manager : MonoBehaviour
             }
         }
     }
+
+     void HandleTreeSpawning()
+    {
+        if (hasTreeOnScreen)
+            return;
+
+        treeSpawnTimer -= Time.deltaTime;
+
+        if (treeSpawnTimer <= 0f)
+        {
+            SpawnTree();
+        }
+    }
+
+    void HandleBallSpawning()
+    {
+        if (hasBallOnScreen)
+            return;
+
+        ballSpawnTimer -= Time.deltaTime;
+
+        if (ballSpawnTimer <= 0f)
+        {
+            SpawnBall();
+        }
+    }
+
+    void SpawnTree()
+    {
+        int laneIndex = Random.Range(0, treeXLanes.Length);
+        float chosenX = treeXLanes[laneIndex];
+        //Debug.Log(chosenX);
+        pooledTree.transform.position = new Vector3(treeSpawnPoint.position.x + chosenX, treeSpawnPoint.position.y, treeSpawnPoint.position.z);
+        //pooledTree.SetActive(true);
+
+        ObjectMover treeMover = pooledTree.GetComponent<ObjectMover>();
+        treeMover.Initialize();
+
+        hasTreeOnScreen = true;
+        treeSpawnTimer = timeBetweenTrees;
+    }
+
+    void SpawnBall()
+    {
+        int laneIndex = Random.Range(0, ballXLanes.Length);
+        float chosenX = ballXLanes[laneIndex];
+        laneIndex = Random.Range(0, ballYLanes.Length);
+        float chosenY = ballYLanes[laneIndex];
+        //Debug.Log(chosenX);
+        int ballType = Random.Range(0, 2);
+        ObjectMover ballMover;
+        if (ballType == 0)
+        {
+            ballHead.transform.position = new Vector3(ballSpawnPoint.position.x + chosenX, ballSpawnPoint.position.y + chosenY, ballSpawnPoint.position.z);
+            ballMover = ballHead.GetComponent<ObjectMover>();
+        }
+        else
+        {
+            ballController.transform.position = new Vector3(ballSpawnPoint.position.x + chosenX, ballSpawnPoint.position.y + chosenY, ballSpawnPoint.position.z);
+            ballMover = ballController.GetComponent<ObjectMover>();
+        }
+
+        ballMover.Initialize();
+
+        hasBallOnScreen = true;
+        ballSpawnTimer = timeBetweenBalls;
+    }
+
+    public void OnObjectDespawned(GameObject obj, DespawnReason reason)
+    {
+        if (obj == ballHead || obj == ballController)
+        {
+            hasBallOnScreen = false;
+
+            if (reason == DespawnReason.PassedPlayer)
+            {
+                ballSpawnTimer = timeBetweenBalls;
+            }
+            // SelectedByPlayer → DO NOT reset timer
+        }
+
+        if (obj == pooledTree)
+        {
+            hasTreeOnScreen = false;
+            treeSpawnTimer = timeBetweenTrees;
+        }
+    }
+
+
 }

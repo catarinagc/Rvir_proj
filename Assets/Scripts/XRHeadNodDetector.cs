@@ -9,6 +9,9 @@ public class XRHeadNodDetector : MonoBehaviour
     public float upAngle = -1f;
     public float minUpSpeed = 2f;
 
+    public Action OnNodStart;
+
+
     [Header("Timing")]
     public float cooldown = 0.25f;
 
@@ -26,6 +29,44 @@ public class XRHeadNodDetector : MonoBehaviour
         lastPitch = GetPitch();
     }
 
+    // void Update()
+    // {
+    //     if (!hmd.isValid)
+    //         hmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+
+    //     cooldownTimer -= Time.deltaTime;
+
+    //     float pitch = GetPitch();
+    //     float delta = pitch - lastPitch;
+    //     float speed = delta / Mathf.Max(Time.deltaTime, 0.0001f);
+
+    //     // Arm on tiny downward movement
+    //     if (pitch > downAngle)
+    //         armed = true;
+
+    //     // if (!armed && pitch > downAngle)
+    //     // {
+    //     //     armed = true;
+    //     //     OnNodStart?.Invoke();
+    //     // }
+
+    //     //Trigger on tiny upward movement
+    //     if (armed &&
+    //         cooldownTimer <= 0f &&
+    //         speed < -minUpSpeed &&
+    //         pitch < upAngle)
+    //     {
+    //         armed = false;
+    //         cooldownTimer = cooldown;
+
+    //         Debug.Log("XR NOD DETECTED");
+    //         OnNod?.Invoke();
+    //     }
+
+
+    //     lastPitch = pitch;
+    // }
+
     void Update()
     {
         if (!hmd.isValid)
@@ -37,17 +78,20 @@ public class XRHeadNodDetector : MonoBehaviour
         float delta = pitch - lastPitch;
         float speed = delta / Mathf.Max(Time.deltaTime, 0.0001f);
 
-        // Arm on tiny downward movement
-        if (pitch > downAngle)
-            armed = true;
+        // Nod START: small downward movement
+        // if (!armed && pitch > downAngle)
+        // {
+        //     armed = true;
+        //     OnNodStart?.Invoke();
+        // }
 
-        // Trigger on tiny upward movement
-        if (armed &&
+        // Nod COMPLETE: upward movement after being armed
+        if (
             cooldownTimer <= 0f &&
             speed < -minUpSpeed &&
             pitch < upAngle)
         {
-            armed = false;
+            //armed = false;
             cooldownTimer = cooldown;
 
             Debug.Log("XR NOD DETECTED");
@@ -56,6 +100,7 @@ public class XRHeadNodDetector : MonoBehaviour
 
         lastPitch = pitch;
     }
+
 
     float GetPitch()
     {
