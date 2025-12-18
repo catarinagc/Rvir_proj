@@ -26,12 +26,13 @@ public class ObjectMover : MonoBehaviour
     void Start()
     {
         player = playerObj.transform;
-        gameObject.SetActive(true);
+        gameObject.SetActive(false);
     }
 
     // Call this from Manager when spawning / reusing
-    public void Initialize()
+    public void Initialize(float newSpeed)
     {
+        speed = newSpeed;
         if (player == null)
         {
             Debug.LogError("ObjectMover: Player Transform not assigned!");
