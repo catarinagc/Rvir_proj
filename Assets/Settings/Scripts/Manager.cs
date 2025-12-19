@@ -14,6 +14,13 @@ public class Manager : MonoBehaviour
     private TextMeshProUGUI scoreTextComponentHead;
     private TextMeshProUGUI scoreTextComponentButton;
     private TextMeshProUGUI scoreTextComponentTree;
+    public HeadTiltMovement headTiltMovement;
+
+    // --- Ball selection timing ---
+    private float ballSpawnTime = 0f;
+    private float totalBallDecisionTime = 0f;
+    private int totalBallDecisions = 0;
+
 
     [Header("Prefabs")]
     public GameObject[] pooledTrees; // size = 2 in Inspector
@@ -51,7 +58,6 @@ public class Manager : MonoBehaviour
     private int activeTreeCount = 0;
 
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         currentSpeed = startSpeed;
@@ -71,7 +77,6 @@ public class Manager : MonoBehaviour
         }
     }
 
-    //// Update is called once per frame
     void Update()
     {
         HandleTreeSpawning();
@@ -111,8 +116,7 @@ public class Manager : MonoBehaviour
     public void addPointTree()
     {
         playerScoreTree++;
-        
-        // Try to get component if it's null (in case it wasn't set in Start)
+
         if (scoreTextComponentTree == null && scoreTextTree != null)
         {
             scoreTextComponentTree = scoreTextTree.GetComponent<TextMeshProUGUI>();
@@ -134,21 +138,7 @@ public class Manager : MonoBehaviour
             }
         }
     }
-//1 TREE verion
-    //  void HandleTreeSpawning()
-    // {
-    //     if (hasTreeOnScreen)
-    //         return;
 
-    //     treeSpawnTimer -= Time.deltaTime;
-
-    //     if (treeSpawnTimer <= 0f)
-    //     {
-    //         SpawnTree();
-    //     }
-    // }
-
-//Multiple tree version
     void HandleTreeSpawning()
     {
         int maxTreesAllowed = CanSpawnSecondTree() ? 2 : 1;
@@ -176,7 +166,26 @@ public class Manager : MonoBehaviour
         {
             if (spawnedControllerTotal + spawnedHeadTotal == totalControllerBall + totalHeadBall)
             {
-                Debug.Log("game ends");
+                Debug.Log("=== END OF GAME SUMMARY ===");
+                Debug.Log($"Green balls selected (button): {playerScoreButton}");
+                Debug.Log($"Red balls selected (head): {playerScoreHead}");
+                Debug.Log($"Total trees hit: {playerScoreTree}");
+
+                if (headTiltMovement != null)
+                {
+                    float avgTilt = headTiltMovement.GetAverageTilt();
+                    Debug.Log($"Average head tilt magnitude: {avgTilt:F2}");
+                }
+
+                if (totalBallDecisions > 0)
+                {
+                    float averageTime = totalBallDecisionTime / totalBallDecisions;
+                    Debug.Log($"Average ball selection time: {averageTime:F2} seconds");
+                }
+
+
+                Debug.Log("=== END OF SUMMARY ===");
+
                 SceneManager.LoadScene("EndMenu");
             }
             SpawnBall();
@@ -184,23 +193,6 @@ public class Manager : MonoBehaviour
         }
     }
 
-//1 tree version
-    // void SpawnTree()
-    // {
-    //     int laneIndex = Random.Range(0, treeXLanes.Length);
-    //     float chosenX = treeXLanes[laneIndex];
-    //     //Debug.Log(chosenX);
-    //     pooledTree.transform.position = new Vector3(treeSpawnPoint.position.x + chosenX, treeSpawnPoint.position.y, treeSpawnPoint.position.z);
-    //     //pooledTree.SetActive(true);
-
-    //     ObjectMover treeMover = pooledTree.GetComponent<ObjectMover>();
-    //     treeMover.Initialize(currentSpeed);
-
-    //     hasTreeOnScreen = true;
-    //     treeSpawnTimer = timeBetweenTrees;
-    // }
-
-//multiple trees version
     void SpawnTree()
     {
         GameObject treeToUse = null;
@@ -233,10 +225,9 @@ public class Manager : MonoBehaviour
         treeSpawnTimer = timeBetweenTrees;
     }
 
-
-
     void SpawnBall()
     {
+
         int laneIndex = Random.Range(0, ballXLanes.Length);
         float chosenX = ballXLanes[laneIndex];
         laneIndex = Random.Range(0, ballYLanes.Length);
@@ -278,6 +269,8 @@ public class Manager : MonoBehaviour
 
         hasBallOnScreen = true;
         ballSpawnTimer = timeBetweenBalls;
+        // Record spawn time
+        ballSpawnTime = Time.time;
     }
 
     public void OnObjectDespawned(GameObject obj, DespawnReason reason)
@@ -286,6 +279,10 @@ public class Manager : MonoBehaviour
         {
             hasBallOnScreen = false;
 
+            float decisionTime = Time.time - ballSpawnTime;
+            totalBallDecisionTime += decisionTime;
+            totalBallDecisions++;
+
             if (reason == DespawnReason.PassedPlayer)
             {
                 ballSpawnTimer = timeBetweenBalls;
@@ -293,11 +290,6 @@ public class Manager : MonoBehaviour
             // SelectedByPlayer → DO NOT reset timer
         }
 
-        // if (obj == pooledTree)
-        // {
-        //     hasTreeOnScreen = false;
-        //     treeSpawnTimer = timeBetweenTrees;
-        // }
         foreach (var tree in pooledTrees)
         {
             if (obj == tree)

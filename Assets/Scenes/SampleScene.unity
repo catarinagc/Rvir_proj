@@ -5878,6 +5878,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   GameManager: {fileID: 961007965}
+  isTutorial: 0
 --- !u!114 &734678937
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13859,7 +13860,7 @@ MonoBehaviour:
   GameManager: {fileID: 961007965}
   pushForce: 4
   detectionRadius: 1.5
-  collisionCooldown: 1
+  collisionCooldown: 2
   debugMode: 0
   playerTag: Player
 --- !u!224 &1714251360 stripped
@@ -14202,6 +14203,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   GameManager: {fileID: 961007965}
+  isTutorial: 0
 --- !u!135 &1778017621
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -15503,7 +15505,7 @@ MonoBehaviour:
   GameManager: {fileID: 961007965}
   pushForce: 4
   detectionRadius: 1.5
-  collisionCooldown: 1
+  collisionCooldown: 2
   debugMode: 0
   playerTag: Player
 --- !u!136 &1903552745

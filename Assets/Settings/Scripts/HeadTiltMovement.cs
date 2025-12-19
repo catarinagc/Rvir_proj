@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 [RequireComponent(typeof(Rigidbody))]
 public class HeadTiltMovement : MonoBehaviour
@@ -13,6 +14,9 @@ public class HeadTiltMovement : MonoBehaviour
     private Rigidbody rb;
     private float calibratedStandingHeight;
     private bool hasCalibrated = false;
+
+    private float totalTilt = 0f;
+    private int tiltSamples = 0;
 
     void Start()
     {
@@ -58,7 +62,15 @@ public class HeadTiltMovement : MonoBehaviour
 
         // Move XR Origin without rotating
         rb.MovePosition(rb.position + horizontalMove);
+
+        totalTilt += Math.Abs(tilt); // use absolute value to ignore left/right sign
+        tiltSamples++;
     }
 
-    
+    public float GetAverageTilt()
+    {
+        if (tiltSamples == 0) return 0f;
+        return totalTilt / tiltSamples;
+    }
+
 }
