@@ -4441,8 +4441,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190335
-  m_fontColor: {r: 1, g: 0, b: 0, a: 1}
+    rgba: 4281282457
+  m_fontColor: {r: 0.5999999, g: 0.18452823, b: 0.18452823, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -7760,6 +7760,7 @@ MonoBehaviour:
   scoreTextHead: {fileID: 596640855}
   scoreTextButton: {fileID: 985754146}
   scoreTextTree: {fileID: 1890653580}
+  headTiltMovement: {fileID: 0}
   pooledTrees:
   - {fileID: 840070563}
   - {fileID: 1706213085}
@@ -7927,8 +7928,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4280024832
-  m_fontColor: {r: 0, g: 1, b: 0.10770178, a: 1}
+    rgba: 4282679357
+  m_fontColor: {r: 0.23768593, g: 0.5018867, b: 0.26566017, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
