@@ -47,7 +47,7 @@ public class Manager : MonoBehaviour
     [Header("Lanes positions")]
     public float[] treeXLanes = new float[] { -5f, 0f, 5f };
     public float[] ballXLanes = new float[] { -5f, 0f, 5f };
-    public float[] ballYLanes = new float[] { 1f, 0f};
+    public float[] ballYLanes = new float[] { 1f, 0f };
 
     [Header("Speed Variables")]
     public float maxSpeed = 2.0f;
@@ -57,12 +57,21 @@ public class Manager : MonoBehaviour
 
     private int activeTreeCount = 0;
 
+    [Header("Tree Spawn Difficulty")]
+    public float startTimeBetweenTrees = 3f;
+    public float minTimeBetweenTrees = 0.8f;
+    public float timeDecreasePerSpawn = 0.1f;
+
+    private float ballsBeforeDoubleTree = 0;   // after this many spawns
 
     void Start()
     {
         currentSpeed = startSpeed;
         scoreTextComponentHead = scoreTextHead.GetComponent<TextMeshProUGUI>();
         scoreTextComponentButton = scoreTextButton.GetComponent<TextMeshProUGUI>();
+        timeBetweenTrees = startTimeBetweenTrees;
+        treeSpawnTimer = timeBetweenTrees;
+        ballsBeforeDoubleTree = (totalControllerBall + totalHeadBall) * 0.7f;
         if (scoreTextTree != null)
         {
             scoreTextComponentTree = scoreTextTree.GetComponent<TextMeshProUGUI>();
@@ -121,7 +130,7 @@ public class Manager : MonoBehaviour
         {
             scoreTextComponentTree = scoreTextTree.GetComponent<TextMeshProUGUI>();
         }
-        
+
         if (scoreTextComponentTree != null)
         {
             scoreTextComponentTree.text = "Trees Collisions: " + playerScoreTree;
@@ -141,19 +150,20 @@ public class Manager : MonoBehaviour
 
     void HandleTreeSpawning()
     {
-        int maxTreesAllowed = CanSpawnSecondTree() ? 2 : 1;
-
-        if (activeTreeCount >= maxTreesAllowed)
-            return;
-
         treeSpawnTimer -= Time.deltaTime;
 
-        if (treeSpawnTimer <= 0f)
-        {
-            SpawnTree();
-        }
-    }
+        if (treeSpawnTimer > 0f)
+            return;
 
+        TrySpawnTree();
+
+        if (spawnedControllerTotal + spawnedHeadTotal >= ballsBeforeDoubleTree)
+        {
+            TrySpawnTree(excludeLastLane: true);
+        }
+
+        treeSpawnTimer = timeBetweenTrees;
+    }
 
     void HandleBallSpawning()
     {
@@ -162,35 +172,40 @@ public class Manager : MonoBehaviour
 
         ballSpawnTimer -= Time.deltaTime;
 
-        if (ballSpawnTimer <= 0f)
+        if (ballSpawnTimer > 0f)
+            return;
+
+        int totalSpawned = spawnedControllerTotal + spawnedHeadTotal;
+        int totalBalls = totalControllerBall + totalHeadBall;
+
+        // ✅ END GAME — STOP HERE
+        if (totalSpawned >= totalBalls)
         {
-            if (spawnedControllerTotal + spawnedHeadTotal == totalControllerBall + totalHeadBall)
+            Debug.Log("=== END OF GAME SUMMARY ===");
+            Debug.Log($"Green balls selected (button): {playerScoreButton}");
+            Debug.Log($"Red balls selected (head): {playerScoreHead}");
+            Debug.Log($"Total trees hit: {playerScoreTree}");
+
+            if (headTiltMovement != null)
             {
-                Debug.Log("=== END OF GAME SUMMARY ===");
-                Debug.Log($"Green balls selected (button): {playerScoreButton}");
-                Debug.Log($"Red balls selected (head): {playerScoreHead}");
-                Debug.Log($"Total trees hit: {playerScoreTree}");
-
-                if (headTiltMovement != null)
-                {
-                    float avgTilt = headTiltMovement.GetAverageTilt();
-                    Debug.Log($"Average head tilt magnitude: {avgTilt:F2}");
-                }
-
-                if (totalBallDecisions > 0)
-                {
-                    float averageTime = totalBallDecisionTime / totalBallDecisions;
-                    Debug.Log($"Average ball selection time: {averageTime:F2} seconds");
-                }
-
-
-                Debug.Log("=== END OF SUMMARY ===");
-
-                SceneManager.LoadScene("EndMenu");
+                float avgTilt = headTiltMovement.GetAverageTilt();
+                Debug.Log($"Average head tilt magnitude: {avgTilt:F2}");
             }
-            SpawnBall();
-            IncreaseSpeed();
+
+            if (totalBallDecisions > 0)
+            {
+                float averageTime = totalBallDecisionTime / totalBallDecisions;
+                Debug.Log($"Average ball selection time: {averageTime:F2} seconds");
+            }
+
+            Debug.Log("=== END OF SUMMARY ===");
+
+            SceneManager.LoadScene("EndMenu");
+            return;
         }
+
+        SpawnBall();
+        IncreaseSpeed();
     }
 
     void SpawnTree()
@@ -222,8 +237,72 @@ public class Manager : MonoBehaviour
         mover.Initialize(currentSpeed);
 
         activeTreeCount++;
+
+        timeBetweenTrees = Mathf.Max(
+            timeBetweenTrees - timeDecreasePerSpawn,
+            minTimeBetweenTrees
+        );
+
         treeSpawnTimer = timeBetweenTrees;
     }
+
+    int lastTreeLane = -1;
+
+    void TrySpawnTree(bool excludeLastLane = false)
+    {
+        if (activeTreeCount >= pooledTrees.Length)
+            return;
+
+        GameObject treeToUse = null;
+
+        foreach (var tree in pooledTrees)
+        {
+            if (!tree.activeSelf)
+            {
+                treeToUse = tree;
+                break;
+            }
+        }
+
+        if (treeToUse == null)
+            return;
+
+        int laneIndex;
+
+        if (excludeLastLane && treeXLanes.Length > 1)
+        {
+            do
+            {
+                laneIndex = Random.Range(0, treeXLanes.Length);
+            }
+            while (laneIndex == lastTreeLane);
+        }
+        else
+        {
+            laneIndex = Random.Range(0, treeXLanes.Length);
+        }
+
+        lastTreeLane = laneIndex;
+
+        float chosenX = treeXLanes[laneIndex];
+
+        treeToUse.transform.position = new Vector3(
+            treeSpawnPoint.position.x + chosenX,
+            treeSpawnPoint.position.y,
+            treeSpawnPoint.position.z
+        );
+
+        ObjectMover mover = treeToUse.GetComponent<ObjectMover>();
+        mover.Initialize(currentSpeed);
+
+        activeTreeCount++;
+
+        timeBetweenTrees = Mathf.Max(
+            timeBetweenTrees - timeDecreasePerSpawn,
+            minTimeBetweenTrees
+        );
+    }
+
 
     void SpawnBall()
     {
@@ -240,7 +319,7 @@ public class Manager : MonoBehaviour
             {
                 ballHead.transform.position = new Vector3(ballSpawnPoint.position.x + chosenX, ballSpawnPoint.position.y + chosenY, ballSpawnPoint.position.z);
                 ballMover = ballHead.GetComponent<ObjectMover>();
-                spawnedHeadTotal++;   
+                spawnedHeadTotal++;
             }
             else
             {
@@ -251,7 +330,7 @@ public class Manager : MonoBehaviour
         }
         else
         {
-            if(spawnedControllerTotal < totalControllerBall)
+            if (spawnedControllerTotal < totalControllerBall)
             {
                 ballController.transform.position = new Vector3(ballSpawnPoint.position.x + chosenX, ballSpawnPoint.position.y + chosenY, ballSpawnPoint.position.z);
                 ballMover = ballController.GetComponent<ObjectMover>();
@@ -261,7 +340,7 @@ public class Manager : MonoBehaviour
             {
                 ballHead.transform.position = new Vector3(ballSpawnPoint.position.x + chosenX, ballSpawnPoint.position.y + chosenY, ballSpawnPoint.position.z);
                 ballMover = ballHead.GetComponent<ObjectMover>();
-                spawnedHeadTotal++;   
+                spawnedHeadTotal++;
             }
         }
 
@@ -295,10 +374,10 @@ public class Manager : MonoBehaviour
             if (obj == tree)
             {
                 activeTreeCount--;
-                treeSpawnTimer = timeBetweenTrees;
                 break;
             }
         }
+
     }
 
 
