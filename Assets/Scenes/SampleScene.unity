@@ -8586,7 +8586,6 @@ MonoBehaviour:
   startTimeBetweenTrees: 3
   minTimeBetweenTrees: 0.8
   timeDecreasePerSpawn: 0.1
-  doubleSpawnChance: 0
 --- !u!1 &976442729
 GameObject:
   m_ObjectHideFlags: 0
@@ -8729,8 +8728,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4282679357
-  m_fontColor: {r: 0.23768593, g: 0.5018867, b: 0.26566017, a: 1}
+    rgba: 4283396380
+  m_fontColor: {r: 0.10980392, g: 0.44313726, b: 0.30980393, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
