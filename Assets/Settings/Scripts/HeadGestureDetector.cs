@@ -1,5 +1,5 @@
-using System.Diagnostics;
 using UnityEngine;
+using Unity.XR.CoreUtils;
 
 public class HeadGestureDetector : MonoBehaviour
 {
@@ -69,19 +69,43 @@ public class HeadGestureDetector : MonoBehaviour
     float lastPitch;
     float cooldownTimer;
     bool nodArmed = false;
+    private Transform cameraTransform;
 
     public System.Action OnLookUpGesture;
 
     void Start()
     {
-        lastPitch = GetPitch(transform.rotation);
+        // Initialize XR camera transform
+        InitializeCameraTransform();
+        lastPitch = GetPitch(GetHeadRotation());
+    }
+
+    void InitializeCameraTransform()
+    {
+        // Find XR Origin in the scene
+        var xrOrigin = FindFirstObjectByType<XROrigin>();
+        if (xrOrigin != null && xrOrigin.Camera != null)
+        {
+            cameraTransform = xrOrigin.Camera.transform;
+        }
+        else
+        {
+            Debug.LogWarning("HeadGestureDetector: XR Origin or Camera not found. Falling back to script transform. Gesture detection may not work correctly.", this);
+            cameraTransform = transform;
+        }
+    }
+
+    Quaternion GetHeadRotation()
+    {
+        // Use camera transform if available, otherwise fall back to script transform
+        return cameraTransform != null ? cameraTransform.rotation : transform.rotation;
     }
 
     void Update()
     {
         cooldownTimer -= Time.deltaTime;
 
-        float pitch = GetPitch(transform.rotation);
+        float pitch = GetPitch(GetHeadRotation());
         float delta = pitch - lastPitch;
         float speed = delta / Mathf.Max(Time.deltaTime, 0.0001f);
 

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 public class Manager : MonoBehaviour
 {
@@ -14,12 +15,15 @@ public class Manager : MonoBehaviour
     private TextMeshProUGUI scoreTextComponentHead;
     private TextMeshProUGUI scoreTextComponentButton;
     private TextMeshProUGUI scoreTextComponentTree;
-    public HeadTiltMovement headTiltMovement;
+    public TutorialHeadTiltMovement headTiltMovement;
 
     // --- Ball selection timing ---
     private float ballSpawnTime = 0f;
     private float totalBallDecisionTime = 0f;
     private int totalBallDecisions = 0;
+
+    // --- Game timing ---
+    private float gameStartTime = 0f;
 
 
     [Header("Prefabs")]
@@ -64,8 +68,13 @@ public class Manager : MonoBehaviour
 
     private float ballsBeforeDoubleTree = 0;   // after this many spawns
 
+    // X position tracking system
+    private HashSet<float> occupiedXPositions = new HashSet<float>();
+    private Dictionary<GameObject, float> objectXPositions = new Dictionary<GameObject, float>();
+
     void Start()
     {
+        gameStartTime = Time.time;
         currentSpeed = startSpeed;
         scoreTextComponentHead = scoreTextHead.GetComponent<TextMeshProUGUI>();
         scoreTextComponentButton = scoreTextButton.GetComponent<TextMeshProUGUI>();
@@ -186,11 +195,24 @@ public class Manager : MonoBehaviour
             Debug.Log($"Red balls selected (head): {playerScoreHead}");
             Debug.Log($"Total trees hit: {playerScoreTree}");
 
+            // Try to find TutorialHeadTiltMovement if not assigned
+            if (headTiltMovement == null)
+            {
+                headTiltMovement = FindObjectOfType<TutorialHeadTiltMovement>();
+            }
+
             if (headTiltMovement != null)
             {
                 float avgTilt = headTiltMovement.GetAverageTilt();
                 Debug.Log($"Average head tilt magnitude: {avgTilt:F2}");
             }
+            else
+            {
+                Debug.LogWarning("Average head tilt magnitude: NOT AVAILABLE (TutorialHeadTiltMovement component not found)");
+            }
+
+            float totalGameTime = Time.time - gameStartTime;
+            Debug.Log($"Total game time: {totalGameTime:F2} seconds");
 
             if (totalBallDecisions > 0)
             {
@@ -248,6 +270,28 @@ public class Manager : MonoBehaviour
 
     int lastTreeLane = -1;
 
+    // Helper methods for X position tracking
+    List<float> GetAvailableXPositions()
+    {
+        List<float> available = new List<float>();
+        foreach (float xLane in treeXLanes)
+        {
+            if (!occupiedXPositions.Contains(xLane))
+            {
+                available.Add(xLane);
+            }
+        }
+        return available;
+    }
+
+    float? GetRandomAvailableXPosition()
+    {
+        List<float> available = GetAvailableXPositions();
+        if (available.Count == 0)
+            return null;
+        return available[Random.Range(0, available.Count)];
+    }
+
     void TrySpawnTree(bool excludeLastLane = false)
     {
         if (activeTreeCount >= pooledTrees.Length)
@@ -267,24 +311,30 @@ public class Manager : MonoBehaviour
         if (treeToUse == null)
             return;
 
-        int laneIndex;
-
-        if (excludeLastLane && treeXLanes.Length > 1)
+        // Get available X positions
+        List<float> availableXPositions = GetAvailableXPositions();
+        
+        // If excludeLastLane is true and we have a last tree lane, filter it out
+        if (excludeLastLane && lastTreeLane >= 0 && lastTreeLane < treeXLanes.Length)
         {
-            do
-            {
-                laneIndex = Random.Range(0, treeXLanes.Length);
-            }
-            while (laneIndex == lastTreeLane);
-        }
-        else
-        {
-            laneIndex = Random.Range(0, treeXLanes.Length);
+            float lastTreeX = treeXLanes[lastTreeLane];
+            availableXPositions.Remove(lastTreeX);
         }
 
+        // If no available positions, don't spawn
+        if (availableXPositions.Count == 0)
+            return;
+
+        // Randomly select from available X positions
+        float chosenX = availableXPositions[Random.Range(0, availableXPositions.Count)];
+        
+        // Find the lane index for tracking (optional, for excludeLastLane logic)
+        int laneIndex = System.Array.IndexOf(treeXLanes, chosenX);
         lastTreeLane = laneIndex;
 
-        float chosenX = treeXLanes[laneIndex];
+        // Mark X position as occupied
+        occupiedXPositions.Add(chosenX);
+        objectXPositions[treeToUse] = chosenX;
 
         treeToUse.transform.position = new Vector3(
             treeSpawnPoint.position.x + chosenX,
@@ -306,25 +356,33 @@ public class Manager : MonoBehaviour
 
     void SpawnBall()
     {
+        // Get available X positions
+        float? availableX = GetRandomAvailableXPosition();
+        if (availableX == null)
+        {
+            // No available X positions, skip spawning this time
+            return;
+        }
+        float chosenX = availableX.Value;
 
-        int laneIndex = Random.Range(0, ballXLanes.Length);
-        float chosenX = ballXLanes[laneIndex];
-        laneIndex = Random.Range(0, ballYLanes.Length);
+        int laneIndex = Random.Range(0, ballYLanes.Length);
         float chosenY = ballYLanes[laneIndex];
+        
+        // Random ball type selection with equal final counts
         int ballType = Random.Range(0, 2);
         ObjectMover ballMover;
+        GameObject ballToSpawn = null;
+        
         if (ballType == 0)
         {
             if (spawnedHeadTotal < totalHeadBall)
             {
-                ballHead.transform.position = new Vector3(ballSpawnPoint.position.x + chosenX, ballSpawnPoint.position.y + chosenY, ballSpawnPoint.position.z);
-                ballMover = ballHead.GetComponent<ObjectMover>();
+                ballToSpawn = ballHead;
                 spawnedHeadTotal++;
             }
-            else
+            else if (spawnedControllerTotal < totalControllerBall)
             {
-                ballController.transform.position = new Vector3(ballSpawnPoint.position.x + chosenX, ballSpawnPoint.position.y + chosenY, ballSpawnPoint.position.z);
-                ballMover = ballController.GetComponent<ObjectMover>();
+                ballToSpawn = ballController;
                 spawnedControllerTotal++;
             }
         }
@@ -332,17 +390,25 @@ public class Manager : MonoBehaviour
         {
             if (spawnedControllerTotal < totalControllerBall)
             {
-                ballController.transform.position = new Vector3(ballSpawnPoint.position.x + chosenX, ballSpawnPoint.position.y + chosenY, ballSpawnPoint.position.z);
-                ballMover = ballController.GetComponent<ObjectMover>();
+                ballToSpawn = ballController;
                 spawnedControllerTotal++;
             }
-            else
+            else if (spawnedHeadTotal < totalHeadBall)
             {
-                ballHead.transform.position = new Vector3(ballSpawnPoint.position.x + chosenX, ballSpawnPoint.position.y + chosenY, ballSpawnPoint.position.z);
-                ballMover = ballHead.GetComponent<ObjectMover>();
+                ballToSpawn = ballHead;
                 spawnedHeadTotal++;
             }
         }
+
+        if (ballToSpawn == null)
+            return;
+
+        ballToSpawn.transform.position = new Vector3(ballSpawnPoint.position.x + chosenX, ballSpawnPoint.position.y + chosenY, ballSpawnPoint.position.z);
+        ballMover = ballToSpawn.GetComponent<ObjectMover>();
+
+        // Mark X position as occupied
+        occupiedXPositions.Add(chosenX);
+        objectXPositions[ballToSpawn] = chosenX;
 
         ballMover.Initialize(currentSpeed);
 
@@ -354,6 +420,14 @@ public class Manager : MonoBehaviour
 
     public void OnObjectDespawned(GameObject obj, DespawnReason reason)
     {
+        // Clear X position when object despawns
+        if (objectXPositions.ContainsKey(obj))
+        {
+            float xPosition = objectXPositions[obj];
+            occupiedXPositions.Remove(xPosition);
+            objectXPositions.Remove(obj);
+        }
+
         if (obj == ballHead || obj == ballController)
         {
             hasBallOnScreen = false;

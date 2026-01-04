@@ -8517,6 +8517,7 @@ GameObject:
   m_Component:
   - component: {fileID: 961007966}
   - component: {fileID: 961007967}
+  - component: {fileID: 961007968}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -8554,7 +8555,7 @@ MonoBehaviour:
   scoreTextHead: {fileID: 596640855}
   scoreTextButton: {fileID: 985754146}
   scoreTextTree: {fileID: 1890653580}
-  headTiltMovement: {fileID: 0}
+  headTiltMovement: {fileID: 1277407131}
   pooledTrees:
   - {fileID: 840070563}
   - {fileID: 1706213085}
@@ -8564,28 +8565,48 @@ MonoBehaviour:
   ballHead: {fileID: 1778017617}
   ballController: {fileID: 734678930}
   treeSpawnPoint: {fileID: 239190642}
-  timeBetweenTrees: 0.1
+  timeBetweenTrees: 1
   ballSpawnPoint: {fileID: 1837402712}
   timeBetweenBalls: 2
-  totalHeadBall: 2
-  totalControllerBall: 2
+  totalHeadBall: 10
+  totalControllerBall: 10
   treeXLanes:
-  - -5
-  - 0
-  - 5
+  - -4
+  - 2
+  - -2
+  - 1
+  - -1
+  - -4
   ballXLanes:
-  - -5
-  - 0
-  - 5
+  - 1
+  - -1
+  - -3
+  - 3
   ballYLanes:
-  - 5
-  - 0
-  maxSpeed: 15
-  startSpeed: 2
-  speedIncreasePerSpawn: 1
-  startTimeBetweenTrees: 3
-  minTimeBetweenTrees: 0.8
+  - 1
+  - 1.5
+  maxSpeed: 2.5
+  startSpeed: 1.5
+  speedIncreasePerSpawn: 0.1
+  startTimeBetweenTrees: 2
+  minTimeBetweenTrees: 1
   timeDecreasePerSpawn: 0.1
+--- !u!114 &961007968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 961007965}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7113b5142b2fc264ea221dc48ef4e0e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fileName: unity_logs.csv
+  usePersistentDataPath: 1
+  appendToFile: 1
+  flushIntervalSeconds: 5
 --- !u!1 &976442729
 GameObject:
   m_ObjectHideFlags: 0
@@ -15169,8 +15190,8 @@ Transform:
   m_GameObject: {fileID: 1743072815}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 500.41, y: 201.92, z: 974.21}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 500.41, y: 201.92, z: 968.96}
+  m_LocalScale: {x: 1, y: 1, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}

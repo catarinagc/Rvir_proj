@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Interaction.Toolkit;
+using Unity.XR.CoreUtils;
 
 public class HeadSelection : MonoBehaviour
 {
@@ -18,6 +19,7 @@ public class HeadSelection : MonoBehaviour
 
     private XRHeadNodDetector nodDetector;
     private Renderer reticleRenderer;
+    private Transform cameraTransform;
 
     // Current raycast hit
     private GameObject currentObject;
@@ -41,6 +43,24 @@ public class HeadSelection : MonoBehaviour
 
         if (reticle != null)
             reticleRenderer = reticle.GetComponent<Renderer>();
+
+        // Initialize XR camera transform
+        InitializeCameraTransform();
+    }
+
+    void InitializeCameraTransform()
+    {
+        // Find XR Origin in the scene
+        var xrOrigin = FindFirstObjectByType<XROrigin>();
+        if (xrOrigin != null && xrOrigin.Camera != null)
+        {
+            cameraTransform = xrOrigin.Camera.transform;
+        }
+        else
+        {
+            Debug.LogWarning("HeadSelection: XR Origin or Camera not found. Falling back to script transform. Head tracking may not work correctly.", this);
+            cameraTransform = transform;
+        }
     }
 
     void Update()
@@ -55,7 +75,12 @@ public class HeadSelection : MonoBehaviour
     // ===============================
     void HandleRaycast()
     {
-        Ray ray = new Ray(transform.position, transform.forward);
+        // Use camera transform if available, otherwise fall back to script transform
+        Transform rayTransform = cameraTransform != null ? cameraTransform : transform;
+        Vector3 rayPosition = rayTransform.position;
+        Vector3 rayDirection = rayTransform.forward;
+
+        Ray ray = new Ray(rayPosition, rayDirection);
         RaycastHit hit;
 
         if (Physics.Raycast(ray, out hit, maxDistance))
@@ -89,8 +114,8 @@ public class HeadSelection : MonoBehaviour
 
             if (reticle != null)
             {
-                reticle.position = transform.position + transform.forward * maxDistance;
-                reticle.rotation = Quaternion.LookRotation(transform.forward);
+                reticle.position = rayPosition + rayDirection * maxDistance;
+                reticle.rotation = Quaternion.LookRotation(rayDirection);
             }
 
             if (reticleRenderer != null)
